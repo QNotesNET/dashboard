@@ -110,6 +110,9 @@ export default function AppShellClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+    if (pathname.includes("/contact/")) return children;
+
+
   let NAV: NavItem[];
   if (role === "admin") {
     NAV = [
