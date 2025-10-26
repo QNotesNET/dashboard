@@ -8,6 +8,7 @@ import Loader from "@/components/Loader";
 import { useRouter } from "next/navigation";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { UploadIcon } from "lucide-react";
+import { toast } from "sonner";
 
 const DigitalNotebook = dynamic(() => import("./DigitalNotebook"), { ssr: false });
 const TextNotebook = dynamic(() => import("./TextNotebook"), { ssr: false });
@@ -202,7 +203,7 @@ export default function NotebookDetailClient({
       setScanOpen(false);
     } catch (err) {
       console.error("scan recognize error", err);
-      alert((err as Error)?.message || "Scan fehlgeschlagen");
+      toast.error((err as Error)?.message || "Scan fehlgeschlagen");
     } finally {
       setScanBusy(false);
       if (fileRef.current) fileRef.current.value = "";
