@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 type LeanNotebook = {
   _id: Types.ObjectId;
   title: string;
-  ownerId?: Types.ObjectId; // ← optional, falls Model es zulässt
+  ownerId?: Types.ObjectId | null;
   createdAt?: Date;
 };
 
@@ -25,11 +25,8 @@ export async function GET() {
 
     await connectToDB();
 
-    // 🔒 Nur Notebooks mit echter Owner-ObjectId
-    const nbs = await Notebook.find(
-      { ownerId: { $exists: true, $ne: null, $type: "objectId" } },
-      { title: 1, ownerId: 1, createdAt: 1 }
-    )
+    // 🔓 Alle Notebooks laden (auch ohne Owner)
+    const nbs = await Notebook.find({}, { title: 1, ownerId: 1, createdAt: 1 })
       .sort({ createdAt: -1 })
       .lean<LeanNotebook[]>();
 
@@ -44,12 +41,16 @@ export async function GET() {
       new Set(
         nbs
           .map((n) => n.ownerId)
-          .filter((id): id is Types.ObjectId => Boolean(id))
-          .map((id) => id!.toString())
+          .filter(
+            (id): id is Types.ObjectId =>
+              // @ts-expect-error ---
+              id !== null && Types.ObjectId.isValid(id)
+          )
+          .map((id) => new Types.ObjectId(id))
       )
-    ).map((id) => new Types.ObjectId(id));
+    );
 
-    // Seiten-Stats aggregieren
+    // Seiten-Statistiken aggregieren
     const pageStats = await Page.aggregate([
       { $match: { notebookId: { $in: nbIds } } },
       {
@@ -67,7 +68,10 @@ export async function GET() {
       },
     ]);
 
-    const statsMap = new Map<string, { totalPages: number; scannedPages: number }>();
+    const statsMap = new Map<
+      string,
+      { totalPages: number; scannedPages: number }
+    >();
     for (const s of pageStats) {
       statsMap.set(String(s._id), {
         totalPages: Number(s.totalPages ?? 0),
@@ -75,7 +79,7 @@ export async function GET() {
       });
     }
 
-    // Owner E-Mails laden
+    // Besitzer-E-Mails laden
     const owners = await User.find(
       { _id: { $in: ownerIds } },
       { email: 1 }
@@ -86,13 +90,19 @@ export async function GET() {
       ownerMap.set(String(o._id), o.email);
     }
 
+    // Ergebnis zusammenbauen
     const result = nbs.map((n) => {
-      const s = statsMap.get(String(n._id)) ?? { totalPages: 0, scannedPages: 0 };
+      const s = statsMap.get(String(n._id)) ?? {
+        totalPages: 0,
+        scannedPages: 0,
+      };
+      const ownerIdStr = n.ownerId ? String(n.ownerId) : null;
+
       return {
         _id: String(n._id),
         title: n.title,
-        ownerId: String(n.ownerId), // existiert sicher durch den $type-Filter
-        ownerEmail: ownerMap.get(String(n.ownerId)) ?? "—",
+        ownerId: ownerIdStr,
+        ownerEmail: ownerIdStr ? ownerMap.get(ownerIdStr) ?? "—" : "—", // wenn kein Owner
         totalPages: s.totalPages,
         scannedPages: s.scannedPages,
         createdAt: n.createdAt ?? null,
