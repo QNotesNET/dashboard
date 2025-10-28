@@ -38,6 +38,7 @@ const OTHER_PUBLIC = [
   "/api/integrations",
   "/contact",
   "/api/contact",
+  "/api/push"
 ];
 
 function startsWithAny(pathname: string, prefixes: string[]) {
