@@ -382,6 +382,44 @@ function UsersSection() {
   const [delTarget, setDelTarget] = useState<UserRow | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // push notification modal
+  const [pushOpen, setPushOpen] = useState(false);
+  const [pushTarget, setPushTarget] = useState<UserRow | null>(null);
+  const [pushTitle, setPushTitle] = useState("");
+  const [pushBody, setPushBody] = useState("");
+  const [pushing, setPushing] = useState(false);
+
+  async function sendPush() {
+    if (!pushTarget?._id) return;
+    try {
+      setPushing(true);
+      const res = await fetch("/api/push/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: pushTarget._id,
+          title: pushTitle,
+          body: pushBody,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Push gesendet.");
+      setPushOpen(false);
+      setPushTarget(null);
+      setPushTitle("");
+      setPushBody("");
+    } catch {
+      toast.error("Push fehlgeschlagen.");
+    } finally {
+      setPushing(false);
+    }
+  }
+
+  function openPush(u: UserRow) {
+    setPushTarget(u);
+    setPushOpen(true);
+  }
+
   const roles = [
     { id: "admin", label: "Admin" },
     { id: "user", label: "User" },
@@ -662,7 +700,9 @@ function UsersSection() {
                                         active && "bg-gray-50"
                                       )}
                                       onClick={() =>
-                                        toast.success("Reset-E-Mail gesendet (Demo).")
+                                        toast.success(
+                                          "Reset-E-Mail gesendet (Demo)."
+                                        )
                                       }
                                     >
                                       <EnvelopeOpenIcon className="h-4 w-4" />{" "}
@@ -670,6 +710,21 @@ function UsersSection() {
                                     </button>
                                   )}
                                 </Menu.Item>
+                                <Menu.Item>
+                                  {({ active }) => (
+                                    <button
+                                      className={cx(
+                                        "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left",
+                                        active && "bg-gray-50"
+                                      )}
+                                      onClick={() => openPush(u)}
+                                    >
+                                      <InformationCircleIcon className="h-4 w-4" />
+                                      Push-Benachrichtigung senden
+                                    </button>
+                                  )}
+                                </Menu.Item>
+
                                 <div className="my-1 h-px bg-gray-100" />
                                 <Menu.Item>
                                   {({ active }) => (
@@ -782,7 +837,9 @@ function UsersSection() {
                                     active && "bg-gray-50"
                                   )}
                                   onClick={() =>
-                                    toast.success("Reset-E-Mail gesendet (Demo).")
+                                    toast.success(
+                                      "Reset-E-Mail gesendet (Demo)."
+                                    )
                                   }
                                 >
                                   <EnvelopeOpenIcon className="h-4 w-4" />{" "}
@@ -948,6 +1005,61 @@ function UsersSection() {
                   disabled={deleting}
                 >
                   {deleting ? "Lösche…" : "Löschen"}
+                </button>
+              </div>
+            </Dialog.Panel>
+          </div>
+        </Dialog>
+      </Transition>
+      {/* Push Dialog */}
+      <Transition show={pushOpen} as={Fragment}>
+        <Dialog onClose={() => setPushOpen(false)} className="relative z-50">
+          <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <Dialog.Panel className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+              <Dialog.Title className="text-base font-semibold">
+                Push-Benachrichtigung senden
+              </Dialog.Title>
+
+              <div className="mt-3 space-y-3">
+                <label className="block text-sm">
+                  <span className="text-gray-700">Titel</span>
+                  <input
+                    value={pushTitle}
+                    onChange={(e) => setPushTitle(e.target.value)}
+                    placeholder="Titel eingeben"
+                    className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-900/10"
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="text-gray-700">Nachricht</span>
+                  <textarea
+                    value={pushBody}
+                    onChange={(e) => setPushBody(e.target.value)}
+                    rows={4}
+                    placeholder="Nachricht eingeben…"
+                    className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-900/10"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-5 flex items-center justify-end gap-2">
+                <button
+                  className="rounded px-3 py-1.5 hover:bg-gray-50"
+                  onClick={() => setPushOpen(false)}
+                  disabled={pushing}
+                >
+                  Abbrechen
+                </button>
+                <button
+                  className={cx(
+                    "rounded bg-black px-3 py-1.5 text-white",
+                    pushing && "opacity-60"
+                  )}
+                  onClick={() => void sendPush()}
+                  disabled={pushing}
+                >
+                  {pushing ? "Sende…" : "Senden"}
                 </button>
               </div>
             </Dialog.Panel>
