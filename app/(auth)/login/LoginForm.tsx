@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
-export default function LoginForm() {
+export default function LoginForm()
+{
   const router = useRouter();
   const sp = useSearchParams();
   const rawNext = sp.get("next") || "/";
@@ -36,6 +37,16 @@ export default function LoginForm() {
     if (!res.ok) return setErr(data?.error || "Login fehlgeschlagen");
     router.replace(nextUrl);
   }
+
+  const step = sp.get("step");
+
+  if (nextUrl.includes("/register-notebook") && step !== "login") {
+    // falls jemand direkt manuell auf die URL kommt,
+    // trotzdem die Auswahlseite zuerst anzeigen
+    router.replace(`/login?next=${encodeURIComponent(nextUrl)}`);
+    return null;
+  }
+
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
