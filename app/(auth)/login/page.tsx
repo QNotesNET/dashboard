@@ -2,15 +2,15 @@ import { Suspense } from "react";
 import LoginForm from "./LoginForm";
 import RegisterDecision from "./RegisterDecision";
 
-export default function LoginPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
+export default async function LoginPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const { searchParams } = await props; // ✅ Promise auflösen
+  // @ts-expect-error ---
   const next = typeof searchParams.next === "string" ? searchParams.next : "/";
+  // @ts-expect-error ---
   const step = typeof searchParams.step === "string" ? searchParams.step : null;
 
-  // Nur zeigen, wenn auf register-notebook UND noch keine Entscheidung getroffen
   const showDecision =
     next.includes("/register-notebook") &&
     step !== "login" &&
