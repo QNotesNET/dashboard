@@ -15,11 +15,12 @@ function cx(...c: Array<string | false | null | undefined>) {
 }
 
 type IconCmp = ComponentType<SVGProps<SVGSVGElement>>;
-type AdminView = "qr" | "users" | "books" | "prompt";
+type AdminView = "qr" | "users" | "books" | "prompt" | "billing";
 type NavItem = { name: string; href: AdminView; icon: IconCmp };
 
 const NAV: NavItem[] = [
   { name: "QR Code PB Zuweisung", href: "qr", icon: QrCodeIcon },
+  { name: "Abrechnung", href: "billing", icon: Bolt },
   { name: "Benutzer Verwaltung", href: "users", icon: UserGroupIcon },
   { name: "Powerbooks / Scans", href: "books", icon: BookOpenIcon },
   { name: "Prompt Einstellungen", href: "prompt", icon: SparklesIcon },

@@ -24,7 +24,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 type SettingsState = {
@@ -1645,7 +1645,7 @@ function BooksSection() {
 export default function AdminPageClient() {
   const [notebookId, setNotebookId] = useState("");
   const [state, setState] = useState<GenState>({ status: "idle" });
-  const [view, setView] = useState<"qr" | "users" | "books" | "prompt">("qr");
+  const [view, setView] = useState<"qr" | "users" | "books" | "prompt" | "billing">("qr");
 
   async function handleGenerate(e?: React.MouseEvent<HTMLButtonElement>) {
     e?.preventDefault();
@@ -1781,6 +1781,14 @@ export default function AdminPageClient() {
       {view === "books" && <BooksSection />}
 
       {view === "prompt" && <PromptSettingsSection />}
+      {view === "billing" && (
+        <button
+          onClick={() => window.open("https://billing.powerbook.at/dashboard", "_blank")}
+          className="mx-auto block rounded-xl bg-gray-900 px-4 py-2 text-white hover:bg-black"
+        >
+          Billing-Portal öffnen
+        </button>
+      )}
     </AppShellClientAdmin>
   );
 }
