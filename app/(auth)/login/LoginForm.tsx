@@ -55,7 +55,7 @@ export default function LoginForm()
         <div className="w-full max-w-sm">
           <Image
             alt="Powerbook"
-            src="/images/logos/logo-new-black.svg"
+            src="/images/logos/test.svg"
             width={160}
             height={80}
             priority
