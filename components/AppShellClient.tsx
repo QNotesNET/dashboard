@@ -189,7 +189,7 @@ export default function AppShellClient({
               <div className="flex h-20 shrink-0 items-center">
                 <Link href="/" onClick={() => setSidebarOpen(false)} className="flex items-center">
                   <Image
-                    src="/images/logos/logo-new-white.svg"
+                    src="/images/logos/logo-new-white.png"
                     alt="Powerbook"
                     width={120}
                     height={36}
@@ -300,7 +300,7 @@ export default function AppShellClient({
         <div className="flex grow flex-col gap-y-6 overflow-y-auto px-6 py-6">
           <div className="flex h-12 shrink-0 items-center">
             <Link href="/" className="flex items-center">
-              <Image src="/images/logos/logo-new-white.svg" alt="Powerbook" width={120} height={36} priority className="h-15 w-auto" />
+              <Image src="/images/logos/logo-new-white.png" alt="Powerbook" width={120} height={36} priority className="h-15 w-auto" />
             </Link>
           </div>
 

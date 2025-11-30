@@ -46,7 +46,7 @@ export default function RegisterForm() {
         <div className="w-full max-w-sm">
           <Image
             alt="Powerbook"
-            src="/images/logos/logo-new-black.svg"
+            src="/images/logos/logo-new-black.png"
             width={120}
             height={36}
             priority

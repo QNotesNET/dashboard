@@ -10,7 +10,7 @@ export default function RegisterDecision({ next }: { next: string }) {
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
       <Image
         alt="Powerbook"
-        src="/images/logos/logo-new-black.svg"
+        src="/images/logos/logo-new-black.png"
         width={160}
         height={80}
         priority
