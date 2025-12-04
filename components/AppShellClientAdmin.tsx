@@ -22,7 +22,7 @@ const NAV: NavItem[] = [
   { name: "QR Code PB Zuweisung", href: "qr", icon: QrCodeIcon },
   { name: "Abrechnung", href: "billing", icon: Bolt },
   { name: "Benutzer Verwaltung", href: "users", icon: UserGroupIcon },
-  { name: "Powerbooks / Scans", href: "books", icon: BookOpenIcon },
+  { name: "Powrbooks / Scans", href: "books", icon: BookOpenIcon },
   { name: "Prompt Einstellungen", href: "prompt", icon: SparklesIcon },
 ];
 

@@ -117,7 +117,7 @@ export default function AppShellClient({
   if (role === "admin") {
     NAV = [
       { name: "Dashboard", href: "/", icon: HomeIcon },
-      { name: "Powerbooks", href: "/notebooks", icon: BookOpenIcon },
+      { name: "Powrbooks", href: "/notebooks", icon: BookOpenIcon },
       { name: "Aufgaben", href: "/todos", icon: CheckIcon },
       { name: "Kalendar", href: "/calendar", icon: CalendarIcon },
       { name: "Kontakte", href: "/contacts", icon: UsersIcon },
@@ -133,7 +133,7 @@ export default function AppShellClient({
   } else {
     NAV = [
       { name: "Dashboard", href: "/", icon: HomeIcon },
-      { name: "Powerbooks", href: "/notebooks", icon: BookOpenIcon },
+      { name: "Powrbooks", href: "/notebooks", icon: BookOpenIcon },
       { name: "Aufgaben", href: "/todos", icon: CheckIcon },
       { name: "Kalendar", href: "/calendar", icon: CalendarIcon },
       { name: "Kontakte", href: "/contacts", icon: UsersIcon },
@@ -190,7 +190,7 @@ export default function AppShellClient({
                 <Link href="/" onClick={() => setSidebarOpen(false)} className="flex items-center">
                   <Image
                     src="/images/logos/logo-new-white.png"
-                    alt="Powerbook"
+                    alt="Powrbook"
                     width={120}
                     height={36}
                     priority
@@ -300,7 +300,7 @@ export default function AppShellClient({
         <div className="flex grow flex-col gap-y-6 overflow-y-auto px-6 py-6">
           <div className="flex h-12 shrink-0 items-center">
             <Link href="/" className="flex items-center">
-              <Image src="/images/logos/logo-new-white.png" alt="Powerbook" width={120} height={36} priority className="h-15 w-auto" />
+              <Image src="/images/logos/logo-new-white.png" alt="Powrbook" width={120} height={36} priority className="h-15 w-auto" />
             </Link>
           </div>
 
@@ -399,7 +399,7 @@ export default function AppShellClient({
           <span className="sr-only">Open sidebar</span>
           <Bars3Icon className="size-6" />
         </button>
-        <div className="flex-1 text-sm font-semibold">Powerbook</div>
+        <div className="flex-1 text-sm font-semibold">Powrbook</div>
       </div>
 
       {/* Main */}
@@ -420,7 +420,7 @@ export default function AppShellClient({
           <div className="pointer-events-auto h-20 bg-black border-t shadow-lg ring-1 ring-white/10 flex items-center justify-between px-16 text-gray-200">
             <Link href="/notebooks" className="inline-flex items-center justify-center size-10 rounded-full hover:bg-white/10 active:scale-95 transition">
               <BookOpen className="size-6" />
-              <span className="sr-only">Powerbooks</span>
+              <span className="sr-only">Powrbooks</span>
             </Link>
             <Link href="/settings" className="inline-flex items-center justify-center size-10 rounded-full hover:bg-white/10 active:scale-95 transition">
               <Settings className="size-6" />
