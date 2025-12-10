@@ -1,4 +1,4 @@
 import Loader from "@/components/Loader";
 export default function Loading() {
-  return <Loader label="Powerbook lädt…" />;
+  return <Loader label="Powrbook lädt…" />;
 }

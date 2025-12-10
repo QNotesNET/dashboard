@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         sound: "default",
         title,
         body,
-        data: { from: "powerbook-admin", userId },
+        data: { from: "powrbook-admin", userId },
       },
     ];
 

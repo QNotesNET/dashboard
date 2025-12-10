@@ -1074,9 +1074,9 @@ type TemplateId = "a5-200" | "a5-140" | "a5-100";
 type Template = { id: TemplateId; label: string; pages: number };
 
 const TEMPLATE_OPTIONS: Template[] = [
-  { id: "a5-200", label: "Powerbook A5 - 200 Seiten", pages: 200 },
-  { id: "a5-140", label: "Powerbook A5 - 140 Seiten", pages: 140 },
-  { id: "a5-100", label: "Powerbook A5 - 100 Seiten", pages: 100 },
+  { id: "a5-200", label: "Powrbook A5 - 200 Seiten", pages: 200 },
+  { id: "a5-140", label: "Powrbook A5 - 140 Seiten", pages: 140 },
+  { id: "a5-100", label: "Powrbook A5 - 100 Seiten", pages: 100 },
 ];
 
 /* ======================= Books Section (nur relevante Klassen tweaked) ======================= */
@@ -1260,14 +1260,14 @@ function BooksSection() {
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-10">
       <div className="mb-5">
-        <h1 className="text-2xl font-semibold">Powerbooks &amp; Scans</h1>
+        <h1 className="text-2xl font-semibold">Powrbooks &amp; Scans</h1>
         <p className="mt-1 text-sm text-gray-500">
           Alle Notizbücher mit Besitzer, Seiten und Scan-Status.
         </p>
       </div>
 
       <div>
-        {/* Powerbook Informationen eingeben wie z.b. Art des Powerbooks im Dropdown */}
+        {/* Powrbook Informationen eingeben wie z.b. Art des Powrbooks im Dropdown */}
       </div>
 
       <div className="mb-4 flex flex-row items-center gap-3">
@@ -1279,7 +1279,7 @@ function BooksSection() {
         />
 
         <Button onClick={() => setCreatePowerbookDropdownOpen(true)}>
-          Neues Powerbook erstellen
+          Neues Powrbook erstellen
         </Button>
       </div>
 
@@ -1309,7 +1309,7 @@ function BooksSection() {
                 setCreatePowerbookDropdownOpen(false);
               }}
             >
-              Powerbook erstellen
+              Powrbook erstellen
             </Button>
           </div>
         </div>
@@ -1497,7 +1497,7 @@ function BooksSection() {
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Dialog.Panel className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
               <Dialog.Title className="text-base font-semibold">
-                Powerbook umbenennen
+                Powrbook umbenennen
               </Dialog.Title>
               <div className="mt-3 space-y-3">
                 <label className="block text-sm">
@@ -1540,7 +1540,7 @@ function BooksSection() {
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Dialog.Panel className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
               <Dialog.Title className="text-base font-semibold">
-                Powerbook Details
+                Powrbook Details
               </Dialog.Title>
               <div className="mt-3 text-sm">
                 {detailsLoading ? (
@@ -1606,7 +1606,7 @@ function BooksSection() {
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Dialog.Panel className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
               <Dialog.Title className="text-base font-semibold text-red-600">
-                Powerbook löschen
+                Powrbook löschen
               </Dialog.Title>
               <p className="mt-2 text-sm text-gray-600">
                 Möchtest du{" "}
@@ -1783,7 +1783,7 @@ export default function AdminPageClient() {
       {view === "prompt" && <PromptSettingsSection />}
       {view === "billing" && (
         <button
-          onClick={() => window.open("https://billing.powerbook.at/dashboard", "_blank")}
+          onClick={() => window.open("https://billing.powrbook.com/dashboard", "_blank")}
           className="mx-auto block rounded-xl bg-gray-900 px-4 py-2 text-white hover:bg-black"
         >
           Billing-Portal öffnen
