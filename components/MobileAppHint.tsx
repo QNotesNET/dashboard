@@ -26,7 +26,7 @@ export default function MobileAppHint() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-4 mb-28 mr-8 md:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-4 md:hidden">
       <div className="relative rounded-2xl border bg-background shadow-xl p-4">
         {/* Close icon (optional nice touch) */}
         {/* <button
