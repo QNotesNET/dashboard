@@ -327,6 +327,9 @@ function SecurityCard() {
   const [twoFAEnabled, setTwoFAEnabled] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [hasBackupCodes, setHasBackupCodes] = useState(false);
+
+
   useEffect(() => {
     let alive = true;
 
@@ -337,6 +340,10 @@ function SecurityCard() {
         const data = await res.json();
         if (!alive) return;
         setTwoFAEnabled(Boolean(data.twoFactorEnabled));
+        const res1 = await fetch("/api/2fa/backup-codes")
+        if (!res1.ok) throw new Error();
+        const data1 = await res1.json();
+        setHasBackupCodes(data1.hasBackupCodes)
       } catch {
         if (!alive) return;
         setTwoFAEnabled(false);
@@ -401,9 +408,9 @@ function SecurityCard() {
 
             {!loading && twoFAEnabled && (
               <>
-                <Button onClick={() => setOpenBackupCodes(true)}>
+                {!hasBackupCodes && (<Button onClick={() => setOpenBackupCodes(true)}>
                   Backup-Codes verwalten
-                </Button>
+                </Button>)}
 
                 <Button onClick={() => setOpenDisable2FA(true)}>
                   2FA deaktivieren
