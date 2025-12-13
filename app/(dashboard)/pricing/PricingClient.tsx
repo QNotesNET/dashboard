@@ -40,29 +40,28 @@ export default function PricingClient({ userId }: { userId: string }) {
     }
   }
 
-  useEffect(() => {
-    async function loadBilling() {
-      try {
-        const res = await fetch("/api/billing/status");
-        const data = await res.json();
+useEffect(() => {
+  async function loadBilling() {
+    try {
+      const res = await fetch("/api/billing/status");
+      const data = await res.json();
 
-        if (data?.plan === "prod_TQfUQ2VcepgPYh") {
-          setCurrentPlan("plus");
-        } else if (data?.plan === "prod_TQfUgamp77Sjbz") {
-          setCurrentPlan("pro");
-        } else {
-          setCurrentPlan("free");
-        }
-      } catch (e) {
-        console.error("Failed to load billing status", e);
+      if (data?.plan === "plus" || data?.plan === "pro") {
+        setCurrentPlan(data.plan);
+      } else {
         setCurrentPlan("free");
-      } finally {
-        setLoadingPlan(false);
       }
+    } catch (e) {
+      console.error("Failed to load billing status", e);
+      setCurrentPlan("free");
+    } finally {
+      setLoadingPlan(false);
     }
+  }
 
-    loadBilling();
-  }, [userId]);
+  loadBilling();
+}, [userId]);
+
 
   // DEMO – später aus Backend
   const BILLING_BASE_URL = "https://billing.powrbook.com/subscribe";
@@ -97,6 +96,7 @@ async function handleManage() {
         <p className="mt-2 text-sm text-gray-500">
           Das physische Powrbook ist optional im Shop erhältlich.
         </p>
+        
 
         {/* BILLING TOGGLE */}
         <div className="mt-6 inline-flex items-center rounded-full border bg-white p-1 shadow-sm">
