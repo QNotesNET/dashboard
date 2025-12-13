@@ -48,7 +48,7 @@ export function Enable2FADialog({
             Zwei-Faktor-Authentifizierung
           </DialogTitle>
           <DialogDescription>
-            Scanne den QR-Code mit Google Authenticator.
+            Scanne den QR-Code mit deiner Authenticator App.
           </DialogDescription>
         </DialogHeader>
 
