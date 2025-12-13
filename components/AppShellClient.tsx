@@ -1,12 +1,29 @@
 "use client";
 
-import { useState, useEffect, Fragment, type ComponentType, type SVGProps } from "react";
+import {
+  useState,
+  useEffect,
+  Fragment,
+  type ComponentType,
+  type SVGProps,
+} from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { ArrowRightOnRectangleIcon, CalendarIcon, CheckIcon, EnvelopeIcon, UsersIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowRightOnRectangleIcon,
+  CalendarIcon,
+  CheckIcon,
+  EnvelopeIcon,
+  UsersIcon,
+} from "@heroicons/react/24/outline";
 
-import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from "@headlessui/react";
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  TransitionChild,
+} from "@headlessui/react";
 import {
   Bars3Icon,
   HomeIcon,
@@ -54,6 +71,53 @@ export default function AppShellClient({
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  type PlanId = "free" | "plus" | "pro";
+  const [plan, setPlan] = useState<PlanId>("free");
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+
+    async function loadPlan() {
+      try {
+        const res = await fetch("/api/billing/status", {
+          signal: ctrl.signal,
+          cache: "no-store",
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        // 🔐 Nur ACTIVE zählt
+        if (
+          data?.state === "active" &&
+          (data.plan === "plus" || data.plan === "pro")
+        ) {
+          setPlan(data.plan);
+        } else {
+          setPlan("free");
+        }
+      } catch {
+        setPlan("free");
+      }
+    }
+
+    loadPlan();
+    return () => ctrl.abort();
+  }, []);
+
+  function planLabel(plan: PlanId) {
+    switch (plan) {
+      case "plus":
+        return "Plus";
+      case "pro":
+        return "Pro";
+      default:
+        return "Free";
+    }
+  }
+
+
   const name = displayName || prettyFromEmail(email);
 
   // —— Avatar live halten
@@ -68,7 +132,10 @@ export default function AppShellClient({
 
     async function refresh() {
       try {
-        const res = await fetch("/api/settings/profile", { method: "GET", signal: ctrl.signal });
+        const res = await fetch("/api/settings/profile", {
+          method: "GET",
+          signal: ctrl.signal,
+        });
         if (!res.ok) return;
         const data = await res.json();
         const url = (data?.avatarUrl as string | undefined) || DEFAULT_AVATAR;
@@ -84,13 +151,19 @@ export default function AppShellClient({
       const url = (e as CustomEvent<string>).detail;
       if (typeof url === "string" && url.length) setAvatar(url);
     };
-    window.addEventListener("pb:avatar-updated", onAvatarUpdated as EventListener);
+    window.addEventListener(
+      "pb:avatar-updated",
+      onAvatarUpdated as EventListener
+    );
 
     let bc: BroadcastChannel | null = null;
     try {
       bc = new BroadcastChannel("pb");
       bc.onmessage = (msg) => {
-        if (msg?.data?.type === "avatar-updated" && typeof msg.data.url === "string") {
+        if (
+          msg?.data?.type === "avatar-updated" &&
+          typeof msg.data.url === "string"
+        ) {
           setAvatar(msg.data.url);
         }
       };
@@ -103,15 +176,19 @@ export default function AppShellClient({
 
     return () => {
       ctrl.abort();
-      window.removeEventListener("pb:avatar-updated", onAvatarUpdated as EventListener);
+      window.removeEventListener(
+        "pb:avatar-updated",
+        onAvatarUpdated as EventListener
+      );
       document.removeEventListener("visibilitychange", onVis);
-      try { bc?.close(); } catch {}
+      try {
+        bc?.close();
+      } catch {}
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-    if (pathname.includes("/contact/")) return children;
-
+  if (pathname.includes("/contact/")) return children;
 
   let NAV: NavItem[];
   if (role === "admin") {
@@ -168,8 +245,15 @@ export default function AppShellClient({
   return (
     <div className="min-h-dvh bg-white">
       {/* Mobile Drawer */}
-      <Dialog open={sidebarOpen} onClose={setSidebarOpen} className="relative z-50 lg:hidden">
-        <DialogBackdrop transition className="fixed inset-0 bg-black transition-opacity data-[closed]:opacity-0" />
+      <Dialog
+        open={sidebarOpen}
+        onClose={setSidebarOpen}
+        className="relative z-50 lg:hidden"
+      >
+        <DialogBackdrop
+          transition
+          className="fixed inset-0 bg-black transition-opacity data-[closed]:opacity-0"
+        />
         <div className="fixed inset-0 flex">
           <DialogPanel
             transition
@@ -177,7 +261,11 @@ export default function AppShellClient({
           >
             <TransitionChild as={Fragment}>
               <div className="absolute left-full top-0 flex w-16 justify-center pt-5 data-[closed]:opacity-0">
-                <button type="button" onClick={() => setSidebarOpen(false)} className="-m-2.5 p-2.5 text-white">
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  className="-m-2.5 p-2.5 text-white"
+                >
                   <span className="sr-only">Close sidebar</span>
                   <XMarkIcon className="size-6" />
                 </button>
@@ -187,7 +275,11 @@ export default function AppShellClient({
             {/* Drawer content */}
             <div className="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4">
               <div className="flex h-20 shrink-0 items-center">
-                <Link href="/" onClick={() => setSidebarOpen(false)} className="flex items-center">
+                <Link
+                  href="/"
+                  onClick={() => setSidebarOpen(false)}
+                  className="flex items-center"
+                >
                   <Image
                     src="/images/logos/logo-new-white.png"
                     alt="Powrbook"
@@ -219,7 +311,9 @@ export default function AppShellClient({
                           onClick={() => setSidebarOpen(false)}
                           aria-current={item.current ? "page" : undefined}
                           className={classNames(
-                            item.current ? "bg-white/10 text-white" : "text-gray-300 hover:bg-white/10 hover:text-white",
+                            item.current
+                              ? "bg-white/10 text-white"
+                              : "text-gray-300 hover:bg-white/10 hover:text-white",
                             "group flex gap-x-3 rounded-md p-2 text-sm font-semibold"
                           )}
                         >
@@ -236,9 +330,13 @@ export default function AppShellClient({
                 {/* PLAN-STREIFEN (MOBILE) */}
                 <div className="mt-4">
                   <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <div className="text-[10px] uppercase tracking-wider text-gray-300">Dein Tarif</div>
+                    <div className="text-[10px] uppercase tracking-wider text-gray-300">
+                      Dein Tarif
+                    </div>
                     <div className="mt-0.5 flex items-center justify-between">
-                      <div className="text-sm font-semibold text-white truncate">{currentPlan}</div>
+                      <div className="text-sm font-semibold text-white truncate">
+                        {planLabel(plan)}
+                      </div>
                       <Link
                         href="/pricing"
                         onClick={() => setSidebarOpen(false)}
@@ -261,7 +359,9 @@ export default function AppShellClient({
                             src={avatar || DEFAULT_AVATAR}
                             alt="Avatar"
                             className="size-full object-cover"
-                            onError={(e) => { (e.currentTarget.src = DEFAULT_AVATAR); }}
+                            onError={(e) => {
+                              e.currentTarget.src = DEFAULT_AVATAR;
+                            }}
                           />
                         </div>
                         <div className="min-w-0">
@@ -286,7 +386,9 @@ export default function AppShellClient({
                       </form>
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-400">Nicht eingeloggt</div>
+                    <div className="text-sm text-gray-400">
+                      Nicht eingeloggt
+                    </div>
                   )}
                 </div>
               </nav>
@@ -300,7 +402,14 @@ export default function AppShellClient({
         <div className="flex grow flex-col gap-y-6 overflow-y-auto px-6 py-6">
           <div className="flex h-12 shrink-0 items-center">
             <Link href="/" className="flex items-center">
-              <Image src="/images/logos/logo-new-white.png" alt="Powrbook" width={120} height={36} priority className="h-15 w-auto" />
+              <Image
+                src="/images/logos/logo-new-white.png"
+                alt="Powrbook"
+                width={120}
+                height={36}
+                priority
+                className="h-15 w-auto"
+              />
             </Link>
           </div>
 
@@ -322,7 +431,9 @@ export default function AppShellClient({
                       href={item.href}
                       aria-current={item.current ? "page" : undefined}
                       className={classNames(
-                        item.current ? "bg-white/10 text-white" : "text-gray-300 hover:bg-white/10 hover:text-white",
+                        item.current
+                          ? "bg-white/10 text-white"
+                          : "text-gray-300 hover:bg-white/10 hover:text-white",
                         "group flex gap-x-3 rounded-md p-2 text-sm font-semibold"
                       )}
                     >
@@ -338,9 +449,13 @@ export default function AppShellClient({
 
             {/* PLAN-STREIFEN (DESKTOP) */}
             <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-gray-300">Dein Tarif</div>
+              <div className="text-[10px] uppercase tracking-wider text-gray-300">
+                Dein Tarif
+              </div>
               <div className="mt-0.5 flex items-center justify-between">
-                <div className="text-sm font-semibold text-white truncate">{currentPlan}</div>
+                <div className="text-sm font-semibold text-white truncate">
+                  {planLabel(plan)}
+                </div>
                 <Link
                   href="/pricing"
                   className="rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-black hover:bg-white/90"
@@ -361,7 +476,9 @@ export default function AppShellClient({
                         src={avatar || DEFAULT_AVATAR}
                         alt="Avatar"
                         className="size-full object-cover"
-                        onError={(e) => { (e.currentTarget.src = DEFAULT_AVATAR); }}
+                        onError={(e) => {
+                          e.currentTarget.src = DEFAULT_AVATAR;
+                        }}
                       />
                     </div>
                     <div className="min-w-0">
@@ -395,7 +512,11 @@ export default function AppShellClient({
 
       {/* Mobile Topbar */}
       <div className="sticky top-0 z-30 flex items-center gap-x-4 bg-black px-4 py-3 text-white shadow-sm lg:hidden">
-        <button type="button" onClick={() => setSidebarOpen(true)} className="-m-2.5 p-2.5 text-gray-200 hover:text-white">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          className="-m-2.5 p-2.5 text-gray-200 hover:text-white"
+        >
           <span className="sr-only">Open sidebar</span>
           <Bars3Icon className="size-6" />
         </button>
@@ -418,11 +539,17 @@ export default function AppShellClient({
         <div className="relative w-full">
           {/* Leiste */}
           <div className="pointer-events-auto h-20 bg-black border-t shadow-lg ring-1 ring-white/10 flex items-center justify-between px-16 text-gray-200">
-            <Link href="/notebooks" className="inline-flex items-center justify-center size-10 rounded-full hover:bg-white/10 active:scale-95 transition">
+            <Link
+              href="/notebooks"
+              className="inline-flex items-center justify-center size-10 rounded-full hover:bg-white/10 active:scale-95 transition"
+            >
               <BookOpen className="size-6" />
               <span className="sr-only">Powrbooks</span>
             </Link>
-            <Link href="/settings" className="inline-flex items-center justify-center size-10 rounded-full hover:bg-white/10 active:scale-95 transition">
+            <Link
+              href="/settings"
+              className="inline-flex items-center justify-center size-10 rounded-full hover:bg-white/10 active:scale-95 transition"
+            >
               <Settings className="size-6" />
               <span className="sr-only">Einstellungen</span>
             </Link>

@@ -9,7 +9,7 @@ type Billing = "monthly" | "yearly";
 type PlanId = "free" | "plus" | "pro";
 
 const UPGRADE_URL = "/billing/upgrade";
-const SHOP_URL = "/shop";
+const SHOP_URL = "https://powrbook.com/shop";
 
 function Check() {
   return <CheckIcon className="h-5 w-5 text-black mx-auto" />;
