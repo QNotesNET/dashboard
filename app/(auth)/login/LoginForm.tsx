@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
@@ -17,6 +17,11 @@ export default function LoginForm() {
   // 🔐 OTP STATE
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
+
+  useEffect(() => {
+    if(otp.length === 6) verifyOtp()
+  }, [otp]);
+
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -205,14 +210,14 @@ export default function LoginForm() {
 
               {err && <p className="mt-4 text-sm text-red-600">{err}</p>}
 
-              {/* ✅ NUR BUTTON HINZUGEFÜGT */}
+              {/* ✅ NUR BUTTON HINZUGEFÜGT
               <button
                 onClick={verifyOtp}
                 disabled={loading}
                 className="mt-6 w-full rounded-md bg-black px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
                 {loading ? "Prüfe…" : "Code bestätigen"}
-              </button>
+              </button> */}
             </>
           )}
         </div>
