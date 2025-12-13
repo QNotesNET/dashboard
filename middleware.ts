@@ -29,6 +29,7 @@ const AUTH_PAGES = [
   "/register",
   "/api/auth/login",
   "/api/auth/register",
+  "/api/auth/2fa"
 ];
 
 // Weitere öffentliche Routen (z.B. QR-Resolver, Shortlinks)

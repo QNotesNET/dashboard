@@ -45,7 +45,7 @@ export default function LoginForm() {
 
     if (data?.twoFactorRequired) {
       setShow2FA(true);
-      // Fokus auf erstes OTP Feld
+      sessionStorage.setItem("2fa_user", data.userId);
       setTimeout(() => inputsRef.current[0]?.focus(), 0);
       return;
     }
@@ -71,6 +71,30 @@ export default function LoginForm() {
     }
   }
 
+  async function verifyOtp() {
+    const code = otp.join("");
+    if (code.length !== 6) return;
+
+    const userId = sessionStorage.getItem("2fa_user");
+    if (!userId) return setErr("Session abgelaufen");
+
+    const res = await fetch("/api/auth/2fa/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, code }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      setErr(data?.error || "Code ungültig");
+      return;
+    }
+
+    router.replace(nextUrl);
+  }
+
+
   const step = sp.get("step");
 
   if (nextUrl.includes("/register-notebook") && step !== "login") {
@@ -92,7 +116,7 @@ export default function LoginForm() {
             className="h-20 w-auto"
           />
 
-          {/* ================= LOGIN VIEW (UNVERÄNDERT) ================= */}
+          {/* ================= LOGIN VIEW ================= */}
           {!show2FA && (
             <>
               <h1 className="mt-8 text-2xl font-bold tracking-tight text-gray-900">
@@ -166,8 +190,9 @@ export default function LoginForm() {
                 {otp.map((digit, i) => (
                   <input
                     key={i}
-                    //@ts-expect-error ---
-                    ref={(el) => (inputsRef.current[i] = el)}
+                    ref={(el) => {
+                      inputsRef.current[i] = el;
+                    }}
                     value={digit}
                     onChange={(e) => onOtpChange(i, e.target.value)}
                     onKeyDown={(e) => onOtpKeyDown(i, e)}
@@ -177,6 +202,17 @@ export default function LoginForm() {
                   />
                 ))}
               </div>
+
+              {err && <p className="mt-4 text-sm text-red-600">{err}</p>}
+
+              {/* ✅ NUR BUTTON HINZUGEFÜGT */}
+              <button
+                onClick={verifyOtp}
+                disabled={loading}
+                className="mt-6 w-full rounded-md bg-black px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {loading ? "Prüfe…" : "Code bestätigen"}
+              </button>
             </>
           )}
         </div>
