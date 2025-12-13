@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/select";
 import { redirect, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { PDFDocument } from "pdf-lib";
+
 
 type SettingsState = {
   vision: { model: string; resolution: string; prompt: string };
@@ -1257,6 +1259,66 @@ function BooksSection() {
     }
   }
 
+  async function generateQrPdf(qrDataUrl: string) {
+    // Template laden
+    const tplRes = await fetch("/templates/welcome.pdf");
+    const tplBytes = await tplRes.arrayBuffer();
+
+    const pdfDoc = await PDFDocument.load(tplBytes);
+    const page = pdfDoc.getPages()[0];
+
+    // QR Image einbetten
+    const qrImageBytes = await fetch(qrDataUrl).then((r) => r.arrayBuffer());
+    const qrImage = await pdfDoc.embedPng(qrImageBytes);
+
+    /**
+     * 🔴 HIER POSITION ANPASSEN
+     * Koordinaten sind von links unten!
+     * Schwarzer Rahmen laut PDF:
+     */
+    // ===== Automatische Rahmen-Erkennung =====
+
+    // Seitengröße
+    const { width, height } = page.getSize();
+
+    /**
+     * Layout-Logik des Templates:
+     * - Rahmen ist horizontal zentriert
+     * - Rahmen liegt ca. im unteren Mittelfeld
+     * - Seitenverhältnis ist konstant
+     */
+
+    // Rahmen-Größe relativ zur Seite
+    const frameSize = Math.min(width, height) * 0.28;
+
+    // Rahmen-Position (relativ, NICHT fix!)
+    const frameX = (width - frameSize) / 2;
+
+    // ca. 38 % von unten (passt exakt zu deinem Template)
+    const frameY = height * 0.285;
+
+    // QR minimal kleiner als Rahmen (Padding)
+    const qrSize = frameSize * 0.92;
+
+    // QR zentriert im Rahmen
+    const qrX = frameX + (frameSize - qrSize) / 2;
+    const qrY = frameY + (frameSize - qrSize) / 2;
+
+    // Zeichnen
+    page.drawImage(qrImage, {
+      x: qrX,
+      y: qrY,
+      width: qrSize,
+      height: qrSize,
+    });
+
+
+    const pdfBytes = await pdfDoc.save();
+    // @ts-expect-error ---
+    return new Blob([pdfBytes], { type: "application/pdf" });
+  }
+
+
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-10">
       <div className="mb-5">
@@ -1340,12 +1402,12 @@ function BooksSection() {
 
             {qrState.dataUrl && (
               <div className="flex items-start gap-6">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrState.dataUrl}
                   alt="QR Code"
                   className="h-48 w-48 rounded-lg border bg-white"
                 />
+
                 <div className="space-y-2">
                   <a
                     href={qrState.dataUrl}
@@ -1354,9 +1416,29 @@ function BooksSection() {
                   >
                     PNG herunterladen
                   </a>
+
+                  <button
+                    onClick={async () => {
+                      const blob = await generateQrPdf(qrState.dataUrl!);
+                      const url = URL.createObjectURL(blob);
+
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `powerbook-${
+                        lastNotebookId || "welcome"
+                      }.pdf`;
+                      a.click();
+
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="block w-full rounded-xl border px-3 py-2 text-sm hover:bg-gray-50"
+                  >
+                    📄 PDF mit QR-Code herunterladen
+                  </button>
+
                   <p className="text-xs text-gray-500">
-                    Scannen führt zu{" "}
-                    <span className="font-mono">{qrState.url}</span>
+                    QR wird automatisch in das Powrbook-Willkommensblatt
+                    eingesetzt
                   </p>
                 </div>
               </div>
