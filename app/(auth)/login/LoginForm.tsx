@@ -166,7 +166,7 @@ export default function LoginForm() {
                 {otp.map((digit, i) => (
                   <input
                     key={i}
-                    //@ts-expect-error
+                    //@ts-expect-error ---
                     ref={(el) => (inputsRef.current[i] = el)}
                     value={digit}
                     onChange={(e) => onOtpChange(i, e.target.value)}
