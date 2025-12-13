@@ -10,13 +10,24 @@ export interface UserDoc {
   role?: string;
   avatarUrl?: string;
 
+  // 🔐 2FA
+  twoFactorEnabled?: boolean;
+  twoFactorSecret?: string;
+  twoFactorTempSecret?: string;
+  twoFactorTempOtpAuthUrl?: string;
+
+  backupCodesGenerated?: boolean;
+  backupCodes?: {
+    hash: string;
+    used: boolean;
+  }[];
+
   nexoroUser?: string;
   nexoroDomain?: string;
 
   resetToken?: string | null;
   resetTokenExpiresAt?: Date | null;
 
-  // 📱 NEU: Expo Push Token
   expoPushToken?: string | null;
 
   createdAt?: Date;
@@ -32,13 +43,27 @@ const UserSchema = new Schema<UserDoc>(
     role: String,
     avatarUrl: { type: String, default: "" },
 
+    // 🔐 2FA
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorSecret: { type: String, default: "" },
+    twoFactorTempSecret: { type: String, default: "" },
+    twoFactorTempOtpAuthUrl: { type: String, default: "" },
+
+    backupCodesGenerated: { type: Boolean, default: false },
+
+    backupCodes: [
+      {
+        hash: { type: String, required: true },
+        used: { type: Boolean, default: false },
+      },
+    ],
+
     nexoroUser: { type: String, default: "" },
     nexoroDomain: { type: String, default: "" },
 
     resetToken: { type: String, index: true, default: null },
     resetTokenExpiresAt: { type: Date, default: null },
 
-    // 📱 NEU:
     expoPushToken: { type: String, default: null },
   },
   { timestamps: true }

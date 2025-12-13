@@ -2,6 +2,10 @@
 
 import { useEffect, useState, isValidElement, cloneElement } from "react";
 import Link from "next/link";
+import { Enable2FADialog } from "@/components/2fa/Enable2FADialog";
+import { BackupCodesDialog } from "@/components/2fa/BackupCodesDialog";
+import { Disable2FADialog } from "@/components/2fa/Disable2FADialog";
+
 
 /* ===================== Settings Page ===================== */
 
@@ -39,7 +43,7 @@ function AvatarCard() {
         if (!res.ok) return;
         const data = await res.json();
         setUrl(data.avatarUrl || "");
-      } catch {}
+      } catch { }
     })();
   }, []);
 
@@ -64,7 +68,7 @@ function AvatarCard() {
         const bc = new BroadcastChannel("pb");
         bc.postMessage({ type: "avatar-updated", url: data.url });
         bc.close();
-      } catch {}
+      } catch { }
     } catch {
       setError("Upload fehlgeschlagen.");
     } finally {
@@ -86,7 +90,7 @@ function AvatarCard() {
         const bc = new BroadcastChannel("pb");
         bc.postMessage({ type: "avatar-updated", url: data.url });
         bc.close();
-      } catch {}
+      } catch { }
     } catch {
       setError("Zurücksetzen fehlgeschlagen.");
     } finally {
@@ -316,13 +320,45 @@ function AccountCard() {
 /* ===================== Security ===================== */
 
 function SecurityCard() {
+  const [open2FA, setOpen2FA] = useState(false);
+  const [openBackupCodes, setOpenBackupCodes] = useState(false);
+  const [openDisable2FA, setOpenDisable2FA] = useState(false);
+
+  const [twoFAEnabled, setTwoFAEnabled] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/settings/security");
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (!alive) return;
+        setTwoFAEnabled(Boolean(data.twoFactorEnabled));
+      } catch {
+        if (!alive) return;
+        setTwoFAEnabled(false);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return (
     <Card>
       <CardHeader
         title="Sicherheit"
         description="Verwalte dein Passwort und weitere Sicherheitsoptionen."
       />
+
       <div className="flex flex-col gap-4">
+        {/* Passwort */}
         <div className="flex items-start justify-between gap-6">
           <div>
             <div className="font-medium">Passwort</div>
@@ -330,6 +366,7 @@ function SecurityCard() {
               Wir speichern Passwörter nie im Klartext.
             </p>
           </div>
+
           <Link
             href="/forgot-password"
             className="inline-flex items-center justify-center rounded-xl border border-gray-200 px-3 py-1.5 text-sm hover:bg-gray-50"
@@ -338,19 +375,77 @@ function SecurityCard() {
           </Link>
         </div>
 
+        {/* 2FA */}
         <div className="rounded-xl border border-dashed border-gray-300 p-4">
-          <div className="mb-1 font-medium">2-Faktor-Authentifizierung</div>
+          <div className="mb-1 flex items-center gap-2 font-medium">
+            2-Faktor-Authentifizierung
+            {twoFAEnabled && (
+              <span className="rounded-full bg-black px-2 py-0.5 text-xs text-white">
+                Aktiviert
+              </span>
+            )}
+          </div>
+
           <p className="text-sm text-gray-500">
-            Optional. Erhöht die Sicherheit beim Login. (UI-Placeholder)
+            Erhöht die Sicherheit beim Login.
           </p>
-          <div className="mt-3">
-            <Button disabled>Einrichtung starten</Button>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {loading && <Button disabled>Lade…</Button>}
+
+            {!loading && !twoFAEnabled && (
+              <Button onClick={() => setOpen2FA(true)}>
+                Einrichtung starten
+              </Button>
+            )}
+
+            {!loading && twoFAEnabled && (
+              <>
+                <Button onClick={() => setOpenBackupCodes(true)}>
+                  Backup-Codes verwalten
+                </Button>
+
+                <Button onClick={() => setOpenDisable2FA(true)}>
+                  2FA deaktivieren
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Enable 2FA */}
+      {!loading && !twoFAEnabled && (
+        <Enable2FADialog
+          open={open2FA}
+          onOpenChange={setOpen2FA}
+          onEnabled={() => setTwoFAEnabled(true)} // 🔥 sofort UI-Update
+        />
+      )}
+
+      {/* Backup Codes */}
+      {!loading && twoFAEnabled && (
+        <BackupCodesDialog
+          open={openBackupCodes}
+          onOpenChange={setOpenBackupCodes}
+        />
+      )}
+
+      {/* Disable 2FA */}
+      {!loading && twoFAEnabled && (
+        <Disable2FADialog
+          open={openDisable2FA}
+          onOpenChange={setOpenDisable2FA}
+          onDisabled={() => setTwoFAEnabled(false)}
+        />
+      )}
     </Card>
   );
 }
+
+
+
+
 
 /* ===================== UI Primitives ===================== */
 
@@ -410,11 +505,10 @@ function Button(
       {...rest}
       disabled={disabled}
       className={`inline-flex items-center justify-center rounded-xl px-3 py-1.5 text-sm font-medium transition-colors
-      ${
-        disabled
+      ${disabled
           ? "cursor-not-allowed border border-gray-200 bg-gray-50 text-gray-400"
           : "border border-gray-900 bg-gray-900 text-white hover:bg-black"
-      }
+        }
       ${className ?? ""}`}
     />
   );
