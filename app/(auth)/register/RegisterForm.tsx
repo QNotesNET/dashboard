@@ -36,7 +36,8 @@ export default function RegisterForm() {
     setLoading(false);
 
     if (!res.ok) return setErr(data?.error || "Fehler bei der Registrierung");
-    router.replace(nextUrl);
+    const sep = nextUrl.includes("?") ? "&" : "?";
+    router.replace(`${nextUrl}${sep}onboarding=1`);
   }
 
   return (
