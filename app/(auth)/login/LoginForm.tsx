@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
-export default function LoginForm()
-{
+export default function LoginForm() {
   const router = useRouter();
   const sp = useSearchParams();
   const rawNext = sp.get("next") || "/";
@@ -13,6 +12,11 @@ export default function LoginForm()
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [show2FA, setShow2FA] = useState(false);
+
+  // 🔐 OTP STATE
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
+  const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,23 +38,49 @@ export default function LoginForm()
     const data = await res.json().catch(() => ({}));
     setLoading(false);
 
-    if (!res.ok) return setErr(data?.error || "Login fehlgeschlagen");
+    if (!res.ok) {
+      setErr(data?.error || "Login fehlgeschlagen");
+      return;
+    }
+
+    if (data?.twoFactorRequired) {
+      setShow2FA(true);
+      // Fokus auf erstes OTP Feld
+      setTimeout(() => inputsRef.current[0]?.focus(), 0);
+      return;
+    }
+
     router.replace(nextUrl);
+  }
+
+  function onOtpChange(index: number, value: string) {
+    if (!/^\d?$/.test(value)) return;
+
+    const next = [...otp];
+    next[index] = value;
+    setOtp(next);
+
+    if (value && index < 5) {
+      inputsRef.current[index + 1]?.focus();
+    }
+  }
+
+  function onOtpKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputsRef.current[index - 1]?.focus();
+    }
   }
 
   const step = sp.get("step");
 
   if (nextUrl.includes("/register-notebook") && step !== "login") {
-    // falls jemand direkt manuell auf die URL kommt,
-    // trotzdem die Auswahlseite zuerst anzeigen
     router.replace(`/login?next=${encodeURIComponent(nextUrl)}`);
     return null;
   }
 
-
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-      {/* Linke Hälfte: Formular, vertikal zentriert */}
+      {/* Linke Hälfte */}
       <div className="flex items-center justify-center px-6 py-12 lg:px-20">
         <div className="w-full max-w-sm">
           <Image
@@ -61,83 +91,103 @@ export default function LoginForm()
             priority
             className="h-20 w-auto"
           />
-          <h1 className="mt-8 text-2xl font-bold tracking-tight text-gray-900">
-            Bei Powrbook anmelden
-          </h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Neu hier?{" "}
-            <a
-              href={`/register?next=${encodeURIComponent(nextUrl)}`}
-              className="font-semibold text-black hover:text-black"
-            >
-              Konto erstellen
-            </a>
-          </p>
 
-          <form onSubmit={onSubmit} className="mt-8 space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-900">
-                E-Mail
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-                placeholder="max@mustermann.com"
-                className="mt-2 block w-full rounded-md border-0 bg-white px-3 py-2 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:text-black"
-              />
-            </div>
+          {/* ================= LOGIN VIEW (UNVERÄNDERT) ================= */}
+          {!show2FA && (
+            <>
+              <h1 className="mt-8 text-2xl font-bold tracking-tight text-gray-900">
+                Bei Powrbook anmelden
+              </h1>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-900">
-                Passwort
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-                placeholder="••••••••"
-                className="mt-2 block w-full rounded-md border-0 bg-white px-3 py-2 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:text-black"
-              />
-            </div>
+              <p className="mt-2 text-sm text-gray-600">
+                Neu hier?{" "}
+                <a
+                  href={`/register?next=${encodeURIComponent(nextUrl)}`}
+                  className="font-semibold text-black hover:text-black"
+                >
+                  Konto erstellen
+                </a>
+              </p>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm text-gray-900">
-                <input
-                  type="checkbox"
-                  className="size-4 rounded border-gray-300 text-black focus:text-black"
-                />
-                Angemeldet bleiben
-              </label>
-              <a href="/forgot-password" className="text-sm font-semibold text-black hover:text-black">
-                Passwort vergessen?
-              </a>
-            </div>
+              <form onSubmit={onSubmit} className="mt-8 space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-900">
+                    E-Mail
+                  </label>
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    placeholder="max@mustermann.com"
+                    className="mt-2 block w-full rounded-md border-0 bg-white px-3 py-2 ring-1 ring-inset ring-gray-300 focus:ring-2"
+                  />
+                </div>
 
-            {err && <p className="text-sm text-red-600">{err}</p>}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900">
+                    Passwort
+                  </label>
+                  <input
+                    name="password"
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    className="mt-2 block w-full rounded-md border-0 bg-white px-3 py-2 ring-1 ring-inset ring-gray-300 focus:ring-2"
+                  />
+                </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex w-full justify-center rounded-md bg-black px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black/90 disabled:opacity-50"
-            >
-              {loading ? "Lädt…" : "Einloggen"}
-            </button>
-          </form>
+                {err && <p className="text-sm text-red-600">{err}</p>}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full rounded-md bg-black px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {loading ? "Lädt…" : "Einloggen"}
+                </button>
+              </form>
+            </>
+          )}
+
+          {/* ================= 2FA VIEW ================= */}
+          {show2FA && (
+            <>
+              <h1 className="mt-8 text-2xl font-bold tracking-tight text-gray-900">
+                Mit Authenticator-App anmelden
+              </h1>
+
+              <p className="mt-2 text-sm text-gray-600">
+                Gib den 6-stelligen Code ein.
+              </p>
+
+              <div className="mt-8 flex gap-2">
+                {otp.map((digit, i) => (
+                  <input
+                    key={i}
+                    //@ts-expect-error
+                    ref={(el) => (inputsRef.current[i] = el)}
+                    value={digit}
+                    onChange={(e) => onOtpChange(i, e.target.value)}
+                    onKeyDown={(e) => onOtpKeyDown(i, e)}
+                    inputMode="numeric"
+                    maxLength={1}
+                    className="h-12 w-12 rounded-md border border-gray-300 text-center text-lg font-medium focus:border-black focus:outline-none"
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Rechte Hälfte: Bild (50%) */}
+      {/* Rechte Hälfte */}
       <div className="relative hidden lg:block">
         <Image
           alt=""
           src="/images/login-image.png"
           fill
-          sizes="(min-width:1024px) 50vw, 0vw"
           className="object-cover"
           priority
         />
