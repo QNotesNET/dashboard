@@ -5,6 +5,7 @@ import PageScan from "@/models/PageScan";
 import { Types } from "mongoose";
 import OpenAI from "openai";
 import { parseKwText } from "@/lib/scan/parseKw";
+import { getSettings } from "@/lib/settings";
 
 export const runtime = "nodejs";
 
@@ -16,7 +17,11 @@ export async function POST(req: Request) {
       imageUrl: string;
     };
 
-    if (!Types.ObjectId.isValid(pageId) || !Types.ObjectId.isValid(notebookId) || !imageUrl) {
+    if (
+      !Types.ObjectId.isValid(pageId) ||
+      !Types.ObjectId.isValid(notebookId) ||
+      !imageUrl
+    ) {
       return NextResponse.json({ error: "bad payload" }, { status: 400 });
     }
 
@@ -40,12 +45,26 @@ export async function POST(req: Request) {
     // Verarbeitung getrennt starten (Antwort blockiert nicht)
     queueMicrotask(async () => {
       try {
-        await PageScan.updateOne({ _id: job!._id }, { $set: { status: "processing" } });
+        await PageScan.updateOne(
+          { _id: job!._id },
+          { $set: { status: "processing" } }
+        );
 
         const apiKey = process.env.OPENROUTER_API_KEY;
         if (!apiKey) {
           throw new Error("Missing OPENROUTER_API_KEY");
         }
+
+        // Settings laden (global)
+        const settings = await getSettings();
+
+        const visionModel = settings.vision?.model || "openai/gpt-4o-mini";
+        const visionDetail =
+          settings.vision?.resolution === "high" ? "high" : "low";
+
+        const visionPrompt =
+          settings.vision?.prompt?.trim() ||
+          "Extract all visible text from the image. Preserve line breaks. Return text only.";
 
         // OpenRouter-Client (nutzt OpenAI SDK, aber mit baseURL von OpenRouter)
         const client = new OpenAI({
@@ -65,19 +84,13 @@ export async function POST(req: Request) {
             content: [
               {
                 type: "text",
-                text:
-                  "Give me the text provided based on this image. " +
-                  "Can be German or English – write the response in the language which was provided originally. " +
-                  "The user can also write keywords like 'CAL', 'TODO', 'WA' - ONLY if they are surrounded by a circle. " +
-                  "Return it exactly as written, one line per item. " +
-                  "Everytime you extracted a keyword put a '--kw' in front of it. " +
-                  "Return only the extracted text (preserve line breaks).",
+                text: visionPrompt,
               },
               {
                 type: "image_url",
                 image_url: {
                   url: imageUrl,
-                  detail: "low", // gleiches Detail wie vorher
+                  detail: visionDetail,
                 },
               },
             ],
@@ -86,7 +99,7 @@ export async function POST(req: Request) {
 
         // Modellwahl: nimm dasselbe Mini-/4o-Modell via OpenRouter-Namespace
         // Wenn du ein anderes Modell willst, in der DB/Settings pflegen.
-        const model = "openai/gpt-4o-mini";
+        const model = "openai/" + visionModel;
 
         const resp = await client.chat.completions.create({
           model,
@@ -114,7 +127,12 @@ export async function POST(req: Request) {
       } catch (err) {
         await PageScan.updateOne(
           { _id: job!._id },
-          { $set: { status: "failed", error: (err as Error)?.message ?? "scan failed" } }
+          {
+            $set: {
+              status: "failed",
+              error: (err as Error)?.message ?? "scan failed",
+            },
+          }
         );
       }
     });
